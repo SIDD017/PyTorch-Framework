@@ -1,38 +1,40 @@
-import apna_torch
+import numpy as np
+import custom_torch as torch
+import time
 
-# Sample data (inputs and outputs)
-X = torch.tensor([[1.0], [2.0], [3.0], [4.0]], dtype=torch.float32)
-Y = torch.tensor([[2.0], [4.0], [6.0], [8.0]], dtype=torch.float32)
+print("ok")
+x = torch.Tensor([[[1,2,3],[2,7,5]], [[4,7,2],[2,7,5]], [[8,0,3],[2,7,5]]], "cpu")
+x.print()
 
-# Initialize weights and bias
-w = torch.tensor(0.0, requires_grad=True)
-b = torch.tensor(0.0, requires_grad=True)
+'''np.random.seed(1234567)
 
-# Define learning rate
-learning_rate = 0.01
-epochs = 100
+def np2dim_idx_val(x):
+  return x.shape, np.argwhere(x != 0), x[x.nonzero()]
 
-# Training loop
-for epoch in range(epochs):
-    # Forward pass: Compute predicted y
-    y_pred = X * w + b
-    
-    # Compute loss (Mean Squared Error)
-    loss = ((y_pred - Y) ** 2).mean()
-    
-    # Backward pass
-    loss.backward()
-    
-    # Update weights and bias
-    with torch.no_grad():
-        w -= learning_rate * w.grad
-        b -= learning_rate * b.grad
-    
-    # Zero the gradients after updating
-    w.grad.zero_()
-    b.grad.zero_()
+N = 3
+M = 5
+P = 7
+threshold = 0.5
 
-    if (epoch + 1) % 10 == 0:
-        print(f'Epoch [{epoch+1}/{epochs}], Loss: {loss.item():.4f}')
+x = np.random.normal(size=[N,M])
+x[np.abs(x) < threshold] = 0
+y = np.random.normal(size=[M,P])
+y[np.abs(y) < threshold] = 0
+z = np.random.normal(size=[P,1])
+z[np.abs(z) < threshold] = 0
 
-print(f'Trained Weight: {w.item()}, Bias: {b.item()}')
+xdims,xidx,xval = np2dim_idx_val(x)
+ydims,yidx,yval = np2dim_idx_val(y)
+zdims,zidx,zval = np2dim_idx_val(z)
+
+start = time.time()
+
+tensor_x = hw3tensor.Tensor(xdims,xidx,xval)
+tensor_y = hw3tensor.Tensor(ydims,yidx,yval)
+tensor_z = hw3tensor.Tensor(zdims,zidx,zval)
+res = tensor_x.matmul(tensor_y).relu().matmul(tensor_z)
+res.print()
+
+end = time.time()
+print(str(end - start) + ' seconds')
+'''
