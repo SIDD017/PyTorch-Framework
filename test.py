@@ -2,39 +2,94 @@ import numpy as np
 import custom_torch as torch
 import time
 
-print("ok")
-x = torch.Tensor([[[1,2,3],[2,7,5]], [[4,7,2],[2,7,5]], [[8,0,3],[2,7,5]]], "cpu")
-x.print()
+x1 = torch.Tensor([1,2,3], "cuda")
+x2 = torch.Tensor([[1,2,3],[4,7,6], [7,3,2]], "cuda")
+x3 = torch.Tensor([[[1,2,3],[4,7,6]], [[7,3,2], [3,8,0]], [[5,6,7], [4,8,0]]], "cuda")
 
-'''np.random.seed(1234567)
+print("x1")
+x1.print()
+print("x2")
+x2.print()
+print("x3")
+x3.print()
 
-def np2dim_idx_val(x):
-  return x.shape, np.argwhere(x != 0), x[x.nonzero()]
+print("Transpose")
+x2.transpose().print()
 
-N = 3
-M = 5
-P = 7
-threshold = 0.5
+print("neg")
+x2.neg().print()
 
-x = np.random.normal(size=[N,M])
-x[np.abs(x) < threshold] = 0
-y = np.random.normal(size=[M,P])
-y[np.abs(y) < threshold] = 0
-z = np.random.normal(size=[P,1])
-z[np.abs(z) < threshold] = 0
+print("reciprocal")
+x2.reciprocal()
 
-xdims,xidx,xval = np2dim_idx_val(x)
-ydims,yidx,yval = np2dim_idx_val(y)
-zdims,zidx,zval = np2dim_idx_val(z)
+print("add")
+x2.add(x2).print()
 
-start = time.time()
+print("subtract")
+x2.subtract(x2).print()
 
-tensor_x = hw3tensor.Tensor(xdims,xidx,xval)
-tensor_y = hw3tensor.Tensor(ydims,yidx,yval)
-tensor_z = hw3tensor.Tensor(zdims,zidx,zval)
-res = tensor_x.matmul(tensor_y).relu().matmul(tensor_z)
-res.print()
+print("mult")
+x2.mult(10).print()
 
-end = time.time()
-print(str(end - start) + ' seconds')
-'''
+print("elementwise_mult")
+x2.elementwise_mult(x2).print()
+
+print("pow")
+x2.pow(3).print()
+
+print("relu")
+x2.relu().print()
+
+print("binarilize")
+x2.binarilize().print()
+
+print("exp")
+x2.exp().print()
+
+
+print("MOVING TO CUDA")
+x1.to("cuda")
+x2.to("cuda")
+x3.to("cuda")
+
+print("x1")
+x1.print()
+print("x2")
+x2.print()
+print("x3")
+x3.print()
+
+print("Transpose")
+x2.transpose().print()
+
+print("neg")
+x2.neg().print()
+
+print("reciprocal")
+x2.reciprocal()
+
+print("add")
+x2.add(x2).print()
+
+print("subtract")
+x2.subtract(x2).print()
+
+print("mult")
+x2.mult(10).print()
+
+print("elementwise_mult")
+x2.elementwise_mult(x2).print()
+
+print("pow")
+x2.pow(3).print()
+
+print("relu")
+x2.relu().print()
+
+print("binarilize")
+x2.binarilize().print()
+
+print("exp")
+x2.exp().print()
+
+
