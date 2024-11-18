@@ -8,6 +8,8 @@
 #include<iostream>
 #include <ostream>
 #include <sstream>
+#include <random>
+#include <cmath>
 
 #define NUM_BLOCKS 64
 #define NUM_THREADS 32
@@ -75,6 +77,10 @@ public:
 
   friend std::ostream& operator<<(std::ostream& os, const Tensor& tensor);
   std::string toString() const;
+
+  static Tensor rand(std::vector<size_t> dims, char* dev);
+  static Tensor randn(std::vector<size_t> dims, char* dev);
+  Tensor log() const;
 };
 
 #endif

@@ -56,5 +56,9 @@ PYBIND11_MODULE(custom_torch,m){
     .def("__imul__", static_cast<Tensor& (Tensor::*)(double)>(&Tensor::operator*=))
     .def("__itruediv__", static_cast<Tensor& (Tensor::*)(double)>(&Tensor::operator/=))
 
-    .def("__repr__", &Tensor::toString);
+    .def("__repr__", &Tensor::toString)
+
+    .def_static("rand", &Tensor::rand)
+    .def_static("randn", &Tensor::randn)
+    .def("log", &Tensor::log);
 }

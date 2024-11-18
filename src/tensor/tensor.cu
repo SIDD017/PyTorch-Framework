@@ -865,3 +865,49 @@ std::string Tensor::toString() const {
   }
   return oss.str();
 }
+
+Tensor Tensor::rand(std::vector<size_t> dims, char* dev) {
+    size_t total_elements = 1;
+    for (size_t dim : dims) total_elements *= dim;
+
+    std::vector<double> random_data(total_elements);
+
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_real_distribution<> dis(0.0, 1.0);
+
+    for (double& val : random_data) {
+        val = dis(gen);
+    }
+
+    return Tensor(random_data, dev).reshape(dims);
+}
+
+Tensor Tensor::randn(std::vector<size_t> dims, char* dev) {
+    size_t total_elements = 1;
+    for (size_t dim : dims) total_elements *= dim;
+
+    std::vector<double> random_data(total_elements);
+
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::normal_distribution<> dis(0.0, 1.0); // Mean = 0, Stddev = 1
+
+    for (double& val : random_data) {
+        val = dis(gen);
+    }
+
+    return Tensor(random_data, dev).reshape(dims);
+}
+
+Tensor Tensor::log() const {
+    Tensor result = *this; // Create a copy of the tensor
+    for (double& val : result.data) {
+        if (val <= 0) {
+            throw std::domain_error("Logarithm undefined for non-positive values");
+        }
+        val = std::log(val);
+    }
+    return result;
+}
+
