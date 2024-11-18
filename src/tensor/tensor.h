@@ -6,6 +6,8 @@
 #include <string>
 #include <omp.h>
 #include<iostream>
+#include <ostream>
+#include <sstream>
 
 #define NUM_BLOCKS 64
 #define NUM_THREADS 32
@@ -47,6 +49,32 @@ public:
   Tensor binarilize();
   Tensor exp();
   Tensor matmul(Tensor x);
+
+  // Overloaded operators
+  Tensor operator+(const Tensor& other) const;
+  Tensor operator-(const Tensor& other) const;
+  Tensor operator*(const Tensor& other) const;
+  Tensor operator/(const Tensor& other) const;
+
+  // Scalar operations
+  Tensor operator+(double scalar) const;
+  Tensor operator-(double scalar) const;
+  Tensor operator*(double scalar) const;
+  Tensor operator/(double scalar) const;
+
+  // In-place operations
+  Tensor& operator+=(const Tensor& other);
+  Tensor& operator-=(const Tensor& other);
+  Tensor& operator*=(const Tensor& other);
+  Tensor& operator/=(const Tensor& other);
+
+  Tensor& operator+=(double scalar);
+  Tensor& operator-=(double scalar);
+  Tensor& operator*=(double scalar);
+  Tensor& operator/=(double scalar);
+
+  friend std::ostream& operator<<(std::ostream& os, const Tensor& tensor);
+  std::string toString() const;
 };
 
 #endif

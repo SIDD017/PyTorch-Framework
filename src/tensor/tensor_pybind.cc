@@ -9,7 +9,7 @@ namespace py = pybind11;
 
 PYBIND11_MODULE(custom_torch,m){
   py::class_<Tensor>(m,"Tensor")
-    .def(py::init<std::vector<size_t>,char*>())
+    // .def(py::init<std::vector<size_t>,char*>())
     .def(py::init<std::vector<double>,char*>())
     .def(py::init<std::vector<std::vector<double>>,char*>())
     .def(py::init<std::vector<std::vector<std::vector<double>>>,char*>())
@@ -31,5 +31,30 @@ PYBIND11_MODULE(custom_torch,m){
     .def("matmul",&Tensor::matmul)
     .def("print",&Tensor::print)
     .def("get_data",&Tensor::get_data)
-    .def("get_dims",&Tensor::get_dims);
+    .def("get_dims",&Tensor::get_dims)
+
+    .def("__add__", static_cast<Tensor (Tensor::*)(const Tensor&) const>(&Tensor::operator+))
+    .def("__sub__", static_cast<Tensor (Tensor::*)(const Tensor&) const>(&Tensor::operator-))
+    .def("__mul__", static_cast<Tensor (Tensor::*)(const Tensor&) const>(&Tensor::operator*))
+    .def("__truediv__", static_cast<Tensor (Tensor::*)(const Tensor&) const>(&Tensor::operator/))
+
+    // Overloaded binary operators (Tensor op double)
+    .def("__add__", static_cast<Tensor (Tensor::*)(double) const>(&Tensor::operator+))
+    .def("__sub__", static_cast<Tensor (Tensor::*)(double) const>(&Tensor::operator-))
+    .def("__mul__", static_cast<Tensor (Tensor::*)(double) const>(&Tensor::operator*))
+    .def("__truediv__", static_cast<Tensor (Tensor::*)(double) const>(&Tensor::operator/))
+
+    // In-place operators (Tensor += Tensor)
+    .def("__iadd__", static_cast<Tensor& (Tensor::*)(const Tensor&)>(&Tensor::operator+=))
+    .def("__isub__", static_cast<Tensor& (Tensor::*)(const Tensor&)>(&Tensor::operator-=))
+    .def("__imul__", static_cast<Tensor& (Tensor::*)(const Tensor&)>(&Tensor::operator*=))
+    .def("__itruediv__", static_cast<Tensor& (Tensor::*)(const Tensor&)>(&Tensor::operator/=))
+
+    // In-place operators (Tensor += double)
+    .def("__iadd__", static_cast<Tensor& (Tensor::*)(double)>(&Tensor::operator+=))
+    .def("__isub__", static_cast<Tensor& (Tensor::*)(double)>(&Tensor::operator-=))
+    .def("__imul__", static_cast<Tensor& (Tensor::*)(double)>(&Tensor::operator*=))
+    .def("__itruediv__", static_cast<Tensor& (Tensor::*)(double)>(&Tensor::operator/=))
+
+    .def("__repr__", &Tensor::toString);
 }

@@ -171,8 +171,8 @@ Tensor::Tensor(std::vector<double> data1, char *dev = "cpu") {
   size_t len = 1;
   for(auto d : dims)
     len *= d;
-  data.resize(len);
-  data = data1;
+  // data.resize(len);
+  data.insert(data.end(), data1.begin(), data1.end()); 
   if(strcmp(dev, "cuda") == 0) {
     CHECK_CUDA_ERRORS(cudaMalloc(&d_data, sizeof(double) * data.size()));
     copyToDevice();
@@ -618,4 +618,250 @@ std::vector<double> Tensor::get_data(){
 
 std::vector<size_t> Tensor::get_dims(){
   return dims;
+}
+
+// Overloaded operators for tensor-tensor operations
+Tensor Tensor::operator+(const Tensor& other) const {
+  if (this->dims != other.dims) {
+    throw std::invalid_argument("Tensors must have the same dimensions for addition.");
+  }
+
+  if (this->device == other.device) {
+    if (strcmp(this->device, "cpu") == 0) {
+      std::vector<double> result_data(this->data.size());
+      for (size_t i = 0; i < this->data.size(); ++i) {
+          result_data[i] = this->data[i] + other.data[i];
+      }
+      return Tensor(result_data, this->device);
+    }
+    else if (strcmp(this->device, "cuda") == 0) {
+      Tensor ret(dims, device);
+      ret.copyToDevice();
+      d_add<<<num_blocks, num_threads>>>(ret.d_data, d_data, other.d_data, data.size());
+      CHECK_CUDA_ERRORS(cudaDeviceSynchronize());
+      ret.copyToHost();
+      return ret;
+    }
+  }  
+  throw std::runtime_error("Tensors must be on the same device for addition.");
+}
+
+Tensor Tensor::operator-(const Tensor& other) const {
+    if (this->dims != other.dims) {
+        throw std::invalid_argument("Tensors must have the same dimensions for subtraction.");
+    }
+
+    std::vector<double> result_data(this->data.size());
+    for (size_t i = 0; i < this->data.size(); ++i) {
+        result_data[i] = this->data[i] - other.data[i];
+    }
+    return Tensor(result_data, this->device);
+}
+
+Tensor Tensor::operator*(const Tensor& other) const {
+    if (this->dims != other.dims) {
+        throw std::invalid_argument("Tensors must have the same dimensions for element-wise multiplication.");
+    }
+
+    std::vector<double> result_data(this->data.size());
+    for (size_t i = 0; i < this->data.size(); ++i) {
+        result_data[i] = this->data[i] * other.data[i];
+    }
+    return Tensor(result_data, this->device);
+}
+
+Tensor Tensor::operator/(const Tensor& other) const {
+    if (this->dims != other.dims) {
+        throw std::invalid_argument("Tensors must have the same dimensions for element-wise division.");
+    }
+
+    std::vector<double> result_data(this->data.size());
+    for (size_t i = 0; i < this->data.size(); ++i) {
+        if (other.data[i] == 0) {
+            throw std::invalid_argument("Division by zero.");
+        }
+        result_data[i] = this->data[i] / other.data[i];
+    }
+    return Tensor(result_data, this->device);
+}
+
+// Scalar operations
+Tensor Tensor::operator+(double scalar) const {
+    std::vector<double> result_data(this->data.size());
+    for (size_t i = 0; i < this->data.size(); ++i) {
+        result_data[i] = this->data[i] + scalar;
+    }
+    return Tensor(result_data, this->device);
+}
+
+Tensor Tensor::operator-(double scalar) const {
+    std::vector<double> result_data(this->data.size());
+    for (size_t i = 0; i < this->data.size(); ++i) {
+        result_data[i] = this->data[i] - scalar;
+    }
+    return Tensor(result_data, this->device);
+}
+
+Tensor Tensor::operator*(double scalar) const {
+    std::vector<double> result_data(this->data.size());
+    for (size_t i = 0; i < this->data.size(); ++i) {
+        result_data[i] = this->data[i] * scalar;
+    }
+    return Tensor(result_data, this->device);
+}
+
+Tensor Tensor::operator/(double scalar) const {
+    if (scalar == 0) {
+        throw std::invalid_argument("Division by zero.");
+    }
+
+    std::vector<double> result_data(this->data.size());
+    for (size_t i = 0; i < this->data.size(); ++i) {
+        result_data[i] = this->data[i] / scalar;
+    }
+    return Tensor(result_data, this->device);
+}
+
+// In-place operations
+Tensor& Tensor::operator+=(const Tensor& other) {
+    if (this->dims != other.dims) {
+        throw std::invalid_argument("Tensors must have the same dimensions for addition.");
+    }
+
+    for (size_t i = 0; i < this->data.size(); ++i) {
+        this->data[i] += other.data[i];
+    }
+    return *this;
+}
+
+Tensor& Tensor::operator-=(const Tensor& other) {
+    if (this->dims != other.dims) {
+        throw std::invalid_argument("Tensors must have the same dimensions for subtraction.");
+    }
+
+    for (size_t i = 0; i < this->data.size(); ++i) {
+        this->data[i] -= other.data[i];
+    }
+    return *this;
+}
+
+Tensor& Tensor::operator*=(const Tensor& other) {
+    if (this->dims != other.dims) {
+        throw std::invalid_argument("Tensors must have the same dimensions for element-wise multiplication.");
+    }
+
+    for (size_t i = 0; i < this->data.size(); ++i) {
+        this->data[i] *= other.data[i];
+    }
+    return *this;
+}
+
+Tensor& Tensor::operator/=(const Tensor& other) {
+    if (this->dims != other.dims) {
+        throw std::invalid_argument("Tensors must have the same dimensions for element-wise division.");
+    }
+
+    for (size_t i = 0; i < this->data.size(); ++i) {
+        if (other.data[i] == 0) {
+            throw std::invalid_argument("Division by zero.");
+        }
+        this->data[i] /= other.data[i];
+    }
+    return *this;
+}
+
+// Scalar in-place operations
+Tensor& Tensor::operator+=(double scalar) {
+    for (size_t i = 0; i < this->data.size(); ++i) {
+        this->data[i] += scalar;
+    }
+    return *this;
+}
+
+Tensor& Tensor::operator-=(double scalar) {
+    for (size_t i = 0; i < this->data.size(); ++i) {
+        this->data[i] -= scalar;
+    }
+    return *this;
+}
+
+Tensor& Tensor::operator*=(double scalar) {
+    for (size_t i = 0; i < this->data.size(); ++i) {
+        this->data[i] *= scalar;
+    }
+    return *this;
+}
+
+Tensor& Tensor::operator/=(double scalar) {
+    if (scalar == 0) {
+        throw std::invalid_argument("Division by zero.");
+    }
+
+    for (size_t i = 0; i < this->data.size(); ++i) {
+        this->data[i] /= scalar;
+    }
+    return *this;
+}
+
+std::ostream& operator<<(std::ostream& os, const Tensor& tensor) {
+    os << "Tensor(";
+    os << "device=" << tensor.device << ", ";
+    os << "dims=[";
+    for (size_t i = 0; i < tensor.dims.size(); ++i) {
+        os << tensor.dims[i];
+        if (i < tensor.dims.size() - 1) os << ", ";
+    }
+    os << "], data=[";
+    for (size_t i = 0; i < tensor.data.size(); ++i) {
+        os << tensor.data[i];
+        if (i < tensor.data.size() - 1) os << ", ";
+    }
+    os << "])";
+    return os;
+}
+
+std::string Tensor::toString() const {
+  std::ostringstream oss;
+  if(dims.size() == 1) {
+    oss << "[";
+    for(auto x : data)
+      oss << std::to_string(x) << ", ";
+    oss << "]\n";
+  }
+  else if(dims.size() == 2) {
+    size_t index = 0;
+    oss << "[";
+    for(auto x : data) {
+      if(index % dims[1] == 0) {
+        oss << "[";
+      }
+      oss << std::to_string(x) << ", ";
+      if(index % dims[1] == dims[1] - 1) {
+        oss << "],\n";
+      }
+      index++;
+    }
+    oss << "]\n";
+  }
+  else if(dims.size() == 3) {
+    size_t index = 0;
+    oss << "[\n";
+    for(size_t i = 0; i < dims[0]; i++) {
+        oss << "  [\n";
+        for(size_t j = 0; j < dims[1]; j++) {
+            oss << "    [";
+            for(size_t k = 0; k < dims[2]; k++) {
+                oss << std::to_string(data[index]) << ", ";
+                if(k < dims[2] - 1) {
+                    oss << ", ";
+                }
+                index++;
+            }
+            oss << "],\n";
+        }
+        oss << "  ],\n";
+    }
+    oss << "]\n";
+  }
+  return oss.str();
 }
