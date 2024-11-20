@@ -1,22 +1,10 @@
-#include "mse_loss.h"
-#include <stdexcept>
+// #include "mse_loss.h"
 
-namespace mse_loss_ns {
+// double MSELoss::forward(const Tensor& predictions, const Tensor& targets) {
+//     Tensor diff = predictions.subtract(targets);
+//     return diff.pow(2).sum() / predictions.get_data().size();
+// }
 
-	double MSELoss::forward(const tensor& prediction, const tensor& target) {
-		if (predictions.get_dims() != targets.get_dims()) {
-			throw std::invalid_argument("Predictions and targets must have the same dimensions");
-		}
-
-		double sum = 0.0;
-		size_t total_elements = predictions.get_data().size();
-
-		for (size_t i = 0; i < total_elements; ++i) {
-			double diff = predictions.get_data()[i] - targets.get_data()[i];
-			sum += diff * diff;
-		}
-
-		return sum / total_elements;
-	}
-
-}
+// Tensor MSELoss::backward(const Tensor& predictions, const Tensor& targets) {
+//     return predictions.subtract(targets).mult(2.0 / predictions.get_data().size());
+// }

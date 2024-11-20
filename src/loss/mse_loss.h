@@ -1,14 +1,20 @@
-#ifndef MSE_LOSS_H
-#define MSE_LOSS_H
+#ifndef MSELOSS_H
+#define MSELOSS_H
 
 #include "tensor.h"
 
-namespace mse_loss_ns {
+class MSELoss {
+public:
+    MSELoss() {}
 
-	class MSELoss {
-	public:
-		double forward(const tensor& prediction, const tensor& target);
-	};
-}
+    Tensor forward(const Tensor& prediction, const Tensor& target) const {
+        Tensor diff = prediction.subtract(target);
+        return diff.pow(2).sum() * (1.0 / target.get_data().size());
+    }
+
+    Tensor operator()(const Tensor& prediction, const Tensor& target) const {
+        return forward(prediction, target);
+    }
+};
 
 #endif

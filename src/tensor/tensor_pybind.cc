@@ -4,6 +4,9 @@
 #include<pybind11/numpy.h>
 #include<pybind11/stl.h>
 #include"tensor.h"
+#include "sgd.h"
+#include "mse_loss.h"
+#include "linear.h"
 
 namespace py = pybind11;
 
@@ -61,4 +64,20 @@ PYBIND11_MODULE(custom_torch,m){
     .def_static("rand", &Tensor::rand)
     .def_static("randn", &Tensor::randn)
     .def("log", &Tensor::log);
+
+  py::class_<SGD>(m, "SGD")
+    .def(py::init<double>())
+    .def("step", [](SGD& self, std::vector<Tensor*>& params, const std::vector<Tensor>& grads) {
+        self.step(params, grads);
+    });
+
+  py::class_<MSELoss>(m, "MSELoss")
+    .def(py::init<>())
+    .def("forward", &MSELoss::forward)
+    .def("__call__", &MSELoss::operator());
+
+  py::class_<Linear>(m, "Linear")
+    .def(py::init<size_t,size_t,char*>())
+    .def("forward", &Linear::forward)
+    .def("__call__", &Linear::operator());
 }

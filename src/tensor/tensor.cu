@@ -10,7 +10,7 @@ void check_cuda(cudaError_t result, char const *const func, const char *const fi
     }   
 }
 
-void Tensor::copyToDevice() {
+void Tensor::copyToDevice() const {
     CHECK_CUDA_ERRORS(cudaMemcpy(d_data, data.data(), data.size() * sizeof(double), cudaMemcpyHostToDevice));
 }
 
@@ -48,6 +48,14 @@ __global__ void d_add(double *out, const double *in1, const double *in2, int siz
   const int step = blockDim.x * gridDim.x;
   for(int i = idx; i < size; i += step) {
     out[i] = in1[i] + in2[i];
+  }
+}
+
+__global__ void d_subtract(double *out, const double *in1, const double *in2, int size) {
+  int idx = blockIdx.x * blockDim.x + threadIdx.x;
+  const int step = blockDim.x * gridDim.x;
+  for(int i = idx; i < size; i += step) {
+    out[i] = in1[i] - in2[i];
   }
 }
 
@@ -253,7 +261,7 @@ Tensor Tensor::ones(std::vector<size_t> dims, char* dev){
   return ret;
 }
 
-size_t Tensor::index(std::vector<size_t> x){
+size_t Tensor::index(std::vector<size_t> x) const {
   if(x.size() != dims.size())
     throw std::runtime_error("Mismatched dims in index");
   size_t ret = 0;
@@ -281,7 +289,7 @@ Tensor Tensor::reshape(std::vector<size_t> new_dims){
   return ret;
 }
 
-Tensor Tensor::transpose(){
+Tensor Tensor::transpose() const {
   if (dims.size() != 2 && dims.size() != 3) {
     throw std::runtime_error("The tensor must be 2D or batched 2D tensors");
   }
@@ -362,7 +370,7 @@ Tensor Tensor::reciprocal(){
   return ret;
 }
 
-Tensor Tensor::add(Tensor x){
+Tensor Tensor::add(Tensor x) const {
   if(dims != x.dims)
     throw std::runtime_error("Mismatched shape in add");
   if(strcmp(device, x.device) != 0) {
@@ -384,7 +392,7 @@ Tensor Tensor::add(Tensor x){
   return ret;
 }
   
-Tensor Tensor::subtract(Tensor x){
+Tensor Tensor::subtract(Tensor x) const {
   if(dims != x.dims)
     throw std::runtime_error("Mismatched shape in subtract");
   if(strcmp(device, x.device) != 0) {
@@ -393,7 +401,7 @@ Tensor Tensor::subtract(Tensor x){
   return add(x.neg());
 }
 
-Tensor Tensor::mult(double x){
+Tensor Tensor::mult(double x)const{
   Tensor ret(dims, device);
   if(strcmp(device, "cpu") == 0) {
     for(size_t i = 0;i < data.size();++i)
@@ -431,7 +439,7 @@ Tensor Tensor::elementwise_mult(Tensor x){
   return ret;
 }
   
-Tensor Tensor::pow(double x){
+Tensor Tensor::pow(double x) const {
   Tensor ret(dims, device);
   if(strcmp(device, "cpu") == 0) {
     for(size_t i = 0;i < data.size();++i)
@@ -495,7 +503,7 @@ Tensor Tensor::exp(){
   return ret;
 }
 
-Tensor Tensor::matmul(Tensor x){
+Tensor Tensor::matmul(Tensor x) const {
   if(strcmp(device, x.device) != 0) {
     throw std::runtime_error("Expected all tensors to be on the same device.");
   }
@@ -612,11 +620,11 @@ void Tensor::print(){
   }
 }
 
-std::vector<double> Tensor::get_data(){
+std::vector<double> Tensor::get_data()  const{
   return data;
 }
 
-std::vector<size_t> Tensor::get_dims(){
+std::vector<size_t> Tensor::get_dims() const{
   return dims;
 }
 
@@ -647,27 +655,54 @@ Tensor Tensor::operator+(const Tensor& other) const {
 }
 
 Tensor Tensor::operator-(const Tensor& other) const {
-    if (this->dims != other.dims) {
-        throw std::invalid_argument("Tensors must have the same dimensions for subtraction.");
-    }
+  if (this->dims != other.dims) {
+    throw std::invalid_argument("Tensors must have the same dimensions for subtraction.");
+  }
 
-    std::vector<double> result_data(this->data.size());
-    for (size_t i = 0; i < this->data.size(); ++i) {
+  if (this->device == other.device) {
+    if (strcmp(this->device, "cpu") == 0) {
+      std::vector<double> result_data(this->data.size());
+      for (size_t i = 0; i < this->data.size(); ++i) {
         result_data[i] = this->data[i] - other.data[i];
+      }
+      return Tensor(result_data, this->device);
     }
-    return Tensor(result_data, this->device);
+    else if (strcmp(this->device, "cuda") == 0) {
+      Tensor ret(dims, device);
+      ret.copyToDevice();
+      d_subtract<<<num_blocks, num_threads>>>(ret.d_data, d_data, other.d_data, data.size());
+      CHECK_CUDA_ERRORS(cudaDeviceSynchronize());
+      ret.copyToHost();
+      return ret;
+    }
+  }  
+  throw std::runtime_error("Tensors must be on the same device for addition.");
 }
 
 Tensor Tensor::operator*(const Tensor& other) const {
-    if (this->dims != other.dims) {
-        throw std::invalid_argument("Tensors must have the same dimensions for element-wise multiplication.");
-    }
+  if (this->dims != other.dims) {
+      throw std::invalid_argument("Tensors must have the same dimensions for element-wise multiplication.");
+  }
 
-    std::vector<double> result_data(this->data.size());
-    for (size_t i = 0; i < this->data.size(); ++i) {
-        result_data[i] = this->data[i] * other.data[i];
+
+  if (this->device == other.device) {
+    if (strcmp(this->device, "cpu") == 0) {
+      std::vector<double> result_data(this->data.size());
+      for (size_t i = 0; i < this->data.size(); ++i) {
+          result_data[i] = this->data[i] * other.data[i];
+      }
+      return Tensor(result_data, this->device);
     }
-    return Tensor(result_data, this->device);
+    else if (strcmp(this->device, "cuda") == 0) {
+      Tensor ret(dims, device);
+      ret.copyToDevice();
+      d_elementwise_mult<<<num_blocks, num_threads>>>(ret.d_data, d_data, other.d_data, data.size());
+      CHECK_CUDA_ERRORS(cudaDeviceSynchronize());
+      ret.copyToHost();
+      return ret;
+    }
+  }  
+  throw std::runtime_error("Tensors must be on the same device for addition.");
 }
 
 Tensor Tensor::operator/(const Tensor& other) const {
@@ -911,3 +946,25 @@ Tensor Tensor::log() const {
     return result;
 }
 
+Tensor Tensor::sum(size_t dim) const {
+    if (dim == SIZE_MAX) {
+        // Sum all elements
+        double total = std::accumulate(data.begin(), data.end(), 0.0);
+        std::vector<double> temp = {total};
+        return Tensor(temp, device);
+    } else if (dim < dims.size()) {
+        // Sum along a specific dimension
+        std::vector<size_t> new_dims = dims;
+        new_dims[dim] = 1; // Reduce the specified dimension
+
+        std::vector<double> result(new_dims[0], 0.0);
+        size_t stride = dims[dim];
+        for (size_t i = 0; i < data.size(); i++) {
+            result[i / stride] += data[i];
+        }
+
+        return Tensor(result, device);
+    } else {
+        throw std::invalid_argument("Invalid dimension for sum operation.");
+    }
+}

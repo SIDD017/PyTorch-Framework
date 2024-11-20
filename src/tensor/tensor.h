@@ -10,6 +10,7 @@
 #include <sstream>
 #include <random>
 #include <cmath>
+#include <numeric>
 
 #define NUM_BLOCKS 64
 #define NUM_THREADS 32
@@ -24,33 +25,35 @@ public:
   int num_blocks = NUM_BLOCKS;
   int num_threads = NUM_THREADS;
   
+  Tensor() {}
   Tensor(std::vector<size_t> dims, char *dev);
   Tensor(std::vector<double> data1, char *dev);
   Tensor(std::vector<std::vector<double>> data1, char *dev);
   Tensor(std::vector<std::vector<std::vector<double>>> data1, char *dev);
   void to(char* dev);
-  size_t index(std::vector<size_t> x);
+  size_t index(std::vector<size_t> x) const;
   void print();
-  std::vector<double> get_data();
-  std::vector<size_t> get_dims();
+  std::vector<double> get_data() const;
+  std::vector<size_t> get_dims() const;
 
-  void copyToDevice();
+  void copyToDevice() const;
   void copyToHost();
   static Tensor ones(std::vector<size_t> dims, char* dev);
   /* HACK: Do this on CPU only */
   Tensor reshape(std::vector<size_t> new_dims);
-  Tensor transpose();
+  Tensor transpose() const;
   Tensor neg();
   Tensor reciprocal();
-  Tensor add(Tensor x);
-  Tensor subtract(Tensor x);
-  Tensor mult(double x);
+  Tensor add(Tensor x) const;
+  Tensor subtract(Tensor x) const;
+  Tensor mult(double x) const;
   Tensor elementwise_mult(Tensor x);
-  Tensor pow(double x);
+  Tensor pow(double x) const;
   Tensor relu();
   Tensor binarilize();
   Tensor exp();
-  Tensor matmul(Tensor x);
+  Tensor matmul(Tensor x) const;
+  Tensor sum(size_t dim = SIZE_MAX) const;
 
   // Overloaded operators
   Tensor operator+(const Tensor& other) const;
