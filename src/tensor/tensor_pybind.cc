@@ -13,9 +13,9 @@ namespace py = pybind11;
 PYBIND11_MODULE(custom_torch,m){
   py::class_<Tensor>(m,"Tensor")
     // .def(py::init<std::vector<size_t>,char*>())
-    .def(py::init<std::vector<double>,char*>())
-    .def(py::init<std::vector<std::vector<double>>,char*>())
-    .def(py::init<std::vector<std::vector<std::vector<double>>>,char*>())
+    .def(py::init<std::vector<double>,std::string>())
+    .def(py::init<std::vector<std::vector<double>>,std::string>())
+    .def(py::init<std::vector<std::vector<std::vector<double>>>,std::string>())
     .def("to",&Tensor::to)
     .def_static("ones",&Tensor::ones)
     .def("index",&Tensor::index)
@@ -47,17 +47,17 @@ PYBIND11_MODULE(custom_torch,m){
     .def("__mul__", static_cast<Tensor (Tensor::*)(double) const>(&Tensor::operator*))
     .def("__truediv__", static_cast<Tensor (Tensor::*)(double) const>(&Tensor::operator/))
 
-    // In-place operators (Tensor += Tensor)
-    .def("__iadd__", static_cast<Tensor& (Tensor::*)(const Tensor&)>(&Tensor::operator+=))
-    .def("__isub__", static_cast<Tensor& (Tensor::*)(const Tensor&)>(&Tensor::operator-=))
-    .def("__imul__", static_cast<Tensor& (Tensor::*)(const Tensor&)>(&Tensor::operator*=))
-    .def("__itruediv__", static_cast<Tensor& (Tensor::*)(const Tensor&)>(&Tensor::operator/=))
+    // // In-place operators (Tensor += Tensor)
+    // .def("__iadd__", static_cast<Tensor& (Tensor::*)(const Tensor&)>(&Tensor::operator+=))
+    // .def("__isub__", static_cast<Tensor& (Tensor::*)(const Tensor&)>(&Tensor::operator-=))
+    // .def("__imul__", static_cast<Tensor& (Tensor::*)(const Tensor&)>(&Tensor::operator*=))
+    // .def("__itruediv__", static_cast<Tensor& (Tensor::*)(const Tensor&)>(&Tensor::operator/=))
 
-    // In-place operators (Tensor += double)
-    .def("__iadd__", static_cast<Tensor& (Tensor::*)(double)>(&Tensor::operator+=))
-    .def("__isub__", static_cast<Tensor& (Tensor::*)(double)>(&Tensor::operator-=))
-    .def("__imul__", static_cast<Tensor& (Tensor::*)(double)>(&Tensor::operator*=))
-    .def("__itruediv__", static_cast<Tensor& (Tensor::*)(double)>(&Tensor::operator/=))
+    // // In-place operators (Tensor += double)
+    // .def("__iadd__", static_cast<Tensor& (Tensor::*)(double)>(&Tensor::operator+=))
+    // .def("__isub__", static_cast<Tensor& (Tensor::*)(double)>(&Tensor::operator-=))
+    // .def("__imul__", static_cast<Tensor& (Tensor::*)(double)>(&Tensor::operator*=))
+    // .def("__itruediv__", static_cast<Tensor& (Tensor::*)(double)>(&Tensor::operator/=))
 
     .def("__repr__", &Tensor::toString)
 
@@ -65,19 +65,19 @@ PYBIND11_MODULE(custom_torch,m){
     .def_static("randn", &Tensor::randn)
     .def("log", &Tensor::log);
 
-  py::class_<SGD>(m, "SGD")
-    .def(py::init<double>())
-    .def("step", [](SGD& self, std::vector<Tensor*>& params, const std::vector<Tensor>& grads) {
-        self.step(params, grads);
-    });
+  // py::class_<SGD>(m, "SGD")
+  //   .def(py::init<double>())
+  //   .def("step", [](SGD& self, std::vector<Tensor*>& params, const std::vector<Tensor>& grads) {
+  //       self.step(params, grads);
+  //   });
 
-  py::class_<MSELoss>(m, "MSELoss")
-    .def(py::init<>())
-    .def("forward", &MSELoss::forward)
-    .def("__call__", &MSELoss::operator());
+  // py::class_<MSELoss>(m, "MSELoss")
+  //   .def(py::init<>())
+  //   .def("forward", &MSELoss::forward)
+  //   .def("__call__", &MSELoss::operator());
 
-  py::class_<Linear>(m, "Linear")
-    .def(py::init<size_t,size_t,char*>())
-    .def("forward", &Linear::forward)
-    .def("__call__", &Linear::operator());
+  // py::class_<Linear>(m, "Linear")
+  //   .def(py::init<size_t,size_t,char*>())
+  //   .def("forward", &Linear::forward)
+  //   .def("__call__", &Linear::operator());
 }
