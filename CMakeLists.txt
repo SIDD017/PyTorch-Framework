@@ -1,22 +1,36 @@
 cmake_minimum_required(VERSION 3.12)
-project(hw3 LANGUAGES CUDA CXX C)
+project(MyTensorProject LANGUAGES CXX CUDA)
 
-set(CMAKE_CXX_STANDARD 11)
-set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR})
-set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR})
+# Set Python paths (adjust to match your Python installation)
+set(PYTHON_INCLUDE_DIR "C:/Program Files/Python/python310/include")
+set(PYTHON_LIB_DIR "C:/Program Files/Python/python310/libs")
+set(PYTHON_LIB "python310")
 
-set(CMAKE_BUILD_TYPE Release)
-##set(CMAKE_CUDA_ARCH_BIN "61")
-set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -forward-unknown-to-host-compiler -fopenmp -arch=sm_61 -O3 -Wall -shared -std=c++11 -fPIC")
-
-##add_subdirectory(pybind11)
-
-find_package(OpenMP)
+# Find Pybind11
 find_package(pybind11 REQUIRED)
-pybind11_add_module(hw3tensor MODULE hw3tensor.cu)
 
-if (OpenMP_CXX_FOUND)
-  include_directories(OpenMP_CXX_INCLUDE_DIRS)
-  target_link_libraries(hw3tensor PUBLIC OpenMP::OpenMP_CXX)
-endif()
+# Set CUDA architecture and include paths
+find_package(CUDA REQUIRED)
+set(CUDA_NVCC_FLAGS ${CUDA_NVCC_FLAGS} "-O2;-std=c++17;--compiler-options;-fPIC")
 
+# Include directories
+include_directories(${PYTHON_INCLUDE_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/src ${CUDA_INCLUDE_DIRS} ${pybind11_INCLUDE_DIRS})
+
+# Source files
+set(SOURCES
+    src/tensor/tensor.cpp
+    src/tensor/tensor_kernels.cu
+    src/loss/mse_loss.cpp
+    src/loss/cross_entropy_loss.cpp
+    src/loss/loss_pybind.cpp
+)
+
+# Add library
+add_library(my_tensor_module SHARED ${SOURCES})
+set_target_properties(my_tensor_module PROPERTIES PREFIX "" SUFFIX ".pyd")
+
+# Link libraries
+target_link_libraries(my_tensor_module PRIVATE ${PYTHON_LIB} pybind11::module ${CUDA_LIBRARIES})
+
+# Output the shared library (Python module)
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/python_module)

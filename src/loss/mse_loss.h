@@ -7,7 +7,7 @@ namespace mse_loss_ns {
 
 	class MSELoss {
 	public:
-		double forward(const tensor& prediction, const tensor& target);
+		double forward(const Tensor& prediction, const Tensor& target);
 	};
 }
 

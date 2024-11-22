@@ -3,20 +3,30 @@
 
 namespace mse_loss_ns {
 
-	double MSELoss::forward(const tensor& prediction, const tensor& target) {
-		if (predictions.get_dims() != targets.get_dims()) {
-			throw std::invalid_argument("Predictions and targets must have the same dimensions");
-		}
+    double MSELoss::forward(const Tensor& prediction, const Tensor& target) {
+        // Ensure predictions and targets have the same dimensions
+        if (prediction.get_dims() != target.get_dims()) {
+            throw std::invalid_argument("Predictions and targets must have the same dimensions");
+        }
 
-		double sum = 0.0;
-		size_t total_elements = predictions.get_data().size();
+        // Calculate the element-wise difference and square it
+        Tensor difference = prediction.subtract(target); // Element-wise subtraction
+        Tensor squared = difference.pow(2.0);            // Element-wise squaring
 
-		for (size_t i = 0; i < total_elements; ++i) {
-			double diff = predictions.get_data()[i] - targets.get_data()[i];
-			sum += diff * diff;
-		}
+        // Sum up the squared elements
+        const std::vector<double>& squared_data = squared.get_data();
+        double sum = 0.0;
+        for (double value : squared_data) {
+            sum += value;
+        }
 
-		return sum / total_elements;
-	}
+        // Calculate the mean by dividing by the total number of elements
+        size_t total_elements = 1;
+        for (size_t dim : prediction.get_dims()) {
+            total_elements *= dim;
+        }
 
-}
+        return sum / total_elements; // Mean Squared Error
+    }
+
+} // namespace mse_loss_ns
