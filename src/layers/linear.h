@@ -2,27 +2,19 @@
 #define LINEAR_H
 
 #include "tensor.h"
-#include <random>
 
 class Linear {
 public:
+    Linear(size_t input_dim, size_t output_dim, std::string device, bool requires_grad)
+        : weights(Tensor::rand({input_dim, output_dim}, device, requires_grad)),
+        bias(Tensor::zeros({1, output_dim}, device, requires_grad)) {}
+
+    Tensor forward(const Tensor& x) {
+        return x.matmul(weights) + bias;
+    }
+
     Tensor weights;
     Tensor bias;
-    char *device;
-
-    Linear(size_t in_features, size_t out_features, char *device = "cpu")
-        : device(device) {
-        weights = Tensor::randn({in_features, out_features}, device);
-        bias = Tensor::randn({out_features}, device);
-    }
-
-    Tensor forward(const Tensor& input) const {
-        return input.matmul(weights).add(bias);
-    }
-
-    Tensor operator()(const Tensor& input) const {
-        return forward(input);
-    }
 };
 
 #endif

@@ -2,19 +2,31 @@
 #define SGD_H
 
 #include "tensor.h"
-#include <vector>
 
 class SGD {
 public:
-    double lr;
-
-    SGD(double lr) : lr(lr) {}
-
-    void step(std::vector<Tensor*>& params, const std::vector<Tensor>& grads) {
-        for (size_t i = 0; i < params.size(); ++i) {
-            *params[i] = params[i]->subtract(grads[i].mult(lr));
+    SGD(std::vector<Tensor*> parameters, double lr) : parameters(parameters), lr(lr) {}
+    
+    void step() {
+        for (auto& param : parameters) {
+            if (param->grad) {
+                auto grad = *(param->grad);
+                for (size_t i = 0; i < param->data.size(); ++i) {
+                    param->data[i] -= lr * grad[i];
+                }
+            }
         }
     }
+
+    void zero_grad() {
+        for (auto& param : parameters) {
+            param->zero_grad();
+        }
+    }
+
+private:
+    std::vector<Tensor*> parameters;
+    double lr;
 };
 
 #endif

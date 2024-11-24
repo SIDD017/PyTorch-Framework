@@ -13,11 +13,12 @@ namespace py = pybind11;
 PYBIND11_MODULE(custom_torch,m){
   py::class_<Tensor>(m,"Tensor")
     // .def(py::init<std::vector<size_t>,char*>())
-    .def(py::init<std::vector<double>,std::string>())
-    .def(py::init<std::vector<std::vector<double>>,std::string>())
-    .def(py::init<std::vector<std::vector<std::vector<double>>>,std::string>())
+    .def(py::init<std::vector<double>,std::string,bool>())
+    .def(py::init<std::vector<std::vector<double>>,std::string,bool>())
+    .def(py::init<std::vector<std::vector<std::vector<double>>>,std::string,bool>())
     .def("to",&Tensor::to)
     .def_static("ones",&Tensor::ones)
+    .def_static("zeros", &Tensor::zeros)
     .def("index",&Tensor::index)
     .def("reshape",&Tensor::reshape)
     .def("transpose",&Tensor::transpose)
@@ -63,21 +64,37 @@ PYBIND11_MODULE(custom_torch,m){
 
     .def_static("rand", &Tensor::rand)
     .def_static("randn", &Tensor::randn)
-    .def("log", &Tensor::log);
+    .def("log", &Tensor::log)
 
-  // py::class_<SGD>(m, "SGD")
-  //   .def(py::init<double>())
-  //   .def("step", [](SGD& self, std::vector<Tensor*>& params, const std::vector<Tensor>& grads) {
-  //       self.step(params, grads);
-  //   });
+    .def("backward",&Tensor::backward)
+    .def("zero_grad",&Tensor::zero_grad)
 
-  // py::class_<MSELoss>(m, "MSELoss")
-  //   .def(py::init<>())
-  //   .def("forward", &MSELoss::forward)
-  //   .def("__call__", &MSELoss::operator());
+    .def("sum",&Tensor::sum)
 
-  // py::class_<Linear>(m, "Linear")
-  //   .def(py::init<size_t,size_t,char*>())
-  //   .def("forward", &Linear::forward)
-  //   .def("__call__", &Linear::operator());
+    .def_property_readonly("grad",
+                      [](const Tensor& t) -> py::list {
+                          if (t.grad) {
+                              return py::cast(*t.grad);
+                          } else {
+                              return py::none();
+                          }
+                      });
+
+    py::class_<Linear>(m, "Linear")
+        .def(py::init<size_t, size_t, std::string, bool>())
+        .def("forward", &Linear::forward)
+        .def_readonly("weights", &Linear::weights)
+        .def_readonly("bias", &Linear::bias);
+
+    // SGD Optimizer
+    py::class_<SGD>(m, "SGD")
+        .def(py::init<std::vector<Tensor*>, double>())
+        .def("step", &SGD::step)
+        .def("zero_grad", &SGD::zero_grad);
+
+    // MSE Loss
+    py::class_<MSELoss>(m, "MSELoss")
+        .def(py::init<>())
+        .def("__call__", &MSELoss::operator());
+
 }
