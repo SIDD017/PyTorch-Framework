@@ -3,12 +3,13 @@
 
 #include "tensor.h"
 
-namespace mse_loss_ns {
-
-	class MSELoss {
-	public:
-		double forward(const tensor& prediction, const tensor& target);
-	};
-}
+class MSELoss {
+public:
+    Tensor operator()(const Tensor& prediction, const Tensor& target) {
+        auto diff = prediction - target;
+        auto squared = diff.elementwise_mult(diff);
+        return squared.sum() * (1.0 / prediction.get_data().size());
+    }
+};
 
 #endif
